@@ -1,0 +1,31 @@
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Prata&family=Outfit&display=swap');
+
+/* Tailwind Directives */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global font-family for body and other elements */
+* {
+    font-family: 'Outfit', sans-serif;
+}
+
+/* Specific font family for elements with class 'prata-regular' */
+.prata-regular {
+    font-family: 'Prata', serif;
+    font-weight: 400;
+    font-style: normal;
+}
+
+::-webkit-scrollbar{
+  display: none;
+}
+
+/* Corrected media query */
+@media (max-width: 640px) {
+  a.active {
+    background-color: black;
+    color: white;
+  }
+}
