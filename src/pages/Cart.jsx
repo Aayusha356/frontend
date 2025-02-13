@@ -3,16 +3,17 @@ import { ShopContext } from "../context/ShopContext";
 import Title from "../components/Title";
 import { assets } from "../assets/assets";
 import CartTotal from "../components/CartTotal";
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const Cart = () => {
+  
   const { currency, cartItems, updateQuantity, navigate, products } = useContext(ShopContext);
   const [cartData, setCartData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 🔍 Log cart items for debugging
   console.log("Cart Items from Context:", cartItems);
 
-  // 🛠 Prepare cart data for display
   useEffect(() => {
     const tempData = [];
     for (const id in cartItems) {
@@ -30,9 +31,69 @@ const Cart = () => {
     setLoading(false);
   }, [cartItems]);
 
-  // Fetch product details from the context products list
   const getProductDetails = (id) => {
     return products.find((product) => product.id === Number(id));
+  };
+
+  const handlePlaceOrder = async () => {
+    const token = localStorage.getItem("accessToken");
+    
+
+    if (!token) {
+      alert("You need to log in first!");
+      navigate("/login");
+      return;
+    }
+
+    if (cartData.length === 0) {
+      alert("Your cart is empty!");
+      return;
+    }
+
+    const totalPrice = cartData.reduce((total, item) => {
+      const product = getProductDetails(item.id);
+      return total + product.price * item.quantity;
+    }, 0);
+
+    const orderData = {
+      user: {
+        id:  localStorage.getItem("userid") || "Unknown User",
+        token: token
+      },
+      totalprice: totalPrice,
+      items: cartData.map((item) => ({
+        id: item.id,
+        name: getProductDetails(item.id)?.name || "Unknown Product",
+        price: getProductDetails(item.id)?.price || 0,
+        size: item.size,
+        quantity: item.quantity,
+        image: getProductDetails(item.id)?.image || "https://via.placeholder.com/150",
+      }))
+    };
+
+    localStorage.setItem("orderData", JSON.stringify(orderData));
+    
+    try {
+      const response = await axios.post(
+        "http://127.0.0.1:8000/product/api/orders/",  
+        orderData,  
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+          },
+        }
+      );
+
+      console.log("Order placed successfully:", response.data);
+      
+      localStorage.removeItem("cartItems");
+      setCartData([]);
+      navigate("/orders");
+    } catch (error) {
+      console.error("Error placing order:", error);
+      alert("You need to log in first!");
+      navigate("/login");
+    }
   };
 
   if (loading) return <div>Loading cart...</div>;
@@ -43,51 +104,36 @@ const Cart = () => {
         <Title text1={"YOUR"} text2={"CART"} />
       </div>
 
-      {/* Cart Items List */}
       <div>
         {cartData.length > 0 ? (
           cartData.map((item, index) => {
             const product = getProductDetails(item.id);
-
-            if (!product) return null; // Skip if product details not loaded
+            if (!product) return null;
 
             return (
               <div
                 key={index}
                 className="py-4 border-t border-b text-gray-700 grid grid-cols-[4fr_0.5fr_0.5fr] sm:grid-cols-[4fr_2fr_0.5fr] items-center gap-4"
               >
-                {/* Product Image & Name */}
                 <div className="flex items-start gap-4">
-                  <img
-                    className="w-16 sm:w-20"
-                    src={product.image || "https://via.placeholder.com/150"}
-                    alt={product.name}
-                  />
+                  <img className="w-16 sm:w-20" src={product.image || "https://via.placeholder.com/150"} alt={product.name} />
                   <div>
                     <p className="text-xs sm:text-lg font-medium">{product.name}</p>
                     <div className="flex items-center gap-5 mt-2">
-                      <p>{currency}{product.price}</p> {/* Use price here instead of predicted_price */}
+                      <p>{currency}{product.price}</p>
                       <p className="px-2 sm:py-1 border bg-slate-50">{item.size}</p>
                     </div>
                   </div>
                 </div>
-
-                {/* Quantity Selector */}
                 <input
-                  onChange={(e) =>
-                    e.target.value === "" || e.target.value === "0"
-                      ? null
-                      : updateQuantity(item.id, item.size, Number(e.target.value))
-                  }
+                  onChange={(e) => e.target.value === "" || e.target.value === "0" ? null : updateQuantity(item.id, item.size, Number(e.target.value))}
                   className="border max-w-10 sm:max-w-20 px-1 sm:px-2 py-1"
                   type="number"
                   min={1}
-                  value={item.quantity} // Use value instead of defaultValue to ensure dynamic updates
+                  value={item.quantity}
                 />
-
-                {/* Remove Item */}
                 <img
-                  onClick={() => updateQuantity(item.id, item.size, 0)} // Set quantity to 0 to remove item
+                  onClick={() => updateQuantity(item.id, item.size, 0)}
                   className="w-4 mr-4 sm:w-5 cursor-pointer"
                   src={assets.bin_icon}
                   alt="Remove"
@@ -100,15 +146,11 @@ const Cart = () => {
         )}
       </div>
 
-      {/* Checkout Section */}
       <div className="flex justify-end my-20">
         <div className="w-full sm:w-[450px]">
           <CartTotal />
           <div className="w-full text-end">
-            <button
-              onClick={() => navigate("/place-order")}
-              className="bg-black text-white text-sm my-8 px-8 py-3"
-            >
+            <button onClick={handlePlaceOrder} className="bg-black text-white text-sm my-8 px-8 py-3">
               PROCEED TO CHECKOUT
             </button>
           </div>

@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const Login = () => {
+  const navigate = useNavigate(); 
   const [currentState, setCurrentState] = useState('Sign Up');
   const [formData, setFormData] = useState({
     username: '',
@@ -25,23 +27,29 @@ const Login = () => {
 
     try {
       const endpoint = currentState === 'Login' 
-        ? 'http://127.0.0.1:8000/api/user/login/'  // Change this to your actual login endpoint
-        : 'http://127.0.0.1:8000/api/user/register/'; // Your signup API endpoint
+        ? 'http://127.0.0.1:8000/api/user/login/'  // Login endpoint
+        : 'http://127.0.0.1:8000/api/user/register/'; // Signup endpoint
 
       const response = await axios.post(endpoint, formData, {
         headers: { 'Content-Type': 'application/json' }
       });
-      if (currentState==='Login') {
-        localStorage.setItem('accessToken',response.data.access);
+
+      if (currentState === 'Login') {
+        localStorage.setItem('accessToken', response.data.access);
+        
+        
       }
+
       setMessage(`Success: ${response.data.message || 'Logged in!'}`);
+      navigate("/"); 
+      
     } catch (err) {
       setError(err.response?.data?.detail || 'Something went wrong');
     }
   };
 
   return (
-    <form onSubmit={onSubmitHandler} className='flex flex-col items-center w-[90%] sm:max-w-96 m-auto mt-14 gap-4 text-gray-800 '>
+    <form onSubmit={onSubmitHandler} className='flex flex-col items-center w-[90%] sm:max-w-96 m-auto mt-14 gap-4 text-gray-800'>
       <div className='inline-flex items-center gap-2 mb-2 mt-10'>
         <p className='prata-regular text-3xl'>{currentState}</p>
         <hr className='border-none h-[1.5px] w-8 bg-gray-800' />

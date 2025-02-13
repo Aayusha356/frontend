@@ -93,7 +93,8 @@ const Product = () => {
       toast.success(`You rated this product ${rating} stars!`);
     } catch (error) {
       console.error("Error submitting rating:", error);
-      toast.error("Failed to submit rating. Please try again later.");
+      toast.error("You must be logged in to submit a rating.");
+      navigate("/login");
     }
   };
 
@@ -183,9 +184,7 @@ const Product = () => {
             {userRating && (
               <p className="mt-2 text-green-500">You rated this {userRating} stars!</p>
             )}
-            {!userToken && (
-              <p className="mt-2 text-red-500">You need to be logged in to submit a rating.</p>
-            )}
+            
           </div>
         </div>
       </div>

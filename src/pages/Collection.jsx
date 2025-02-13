@@ -7,16 +7,21 @@ const Collection = () => {
   const { products, search } = useContext(ShopContext); // Get products and search from context
   const [filterProducts, setFilterProducts] = useState([]);
   const [category, setCategory] = useState([]);
-  const [subCategory, setSubCategory] = useState([]);
   const [sortType, setSortType] = useState("relevant");
 
+  // Debugging: Check if products are being fetched correctly
+  useEffect(() => {
+    console.log("Fetched products:", products);
+  }, [products]);
 
-  console.log(products);
-  
-
-  // Filter and Sort Logic
+  // Filtering and Sorting Logic
   const applyFilterAndSort = () => {
+    if (!products || products.length === 0) return; // Ensure products exist
+
     let filteredProducts = [...products];
+
+    // Debugging: Log filter conditions
+    console.log("Filtering with:", { category, search, sortType });
 
     // Filter by search term
     if (search) {
@@ -25,21 +30,14 @@ const Collection = () => {
       );
     }
 
-    // Filter by selected categories
+    // ✅ Filter by selected category names
     if (category.length > 0) {
       filteredProducts = filteredProducts.filter((item) =>
-        category.includes(item.category)
+        category.includes(item.category) // Ensure item.category matches the selected categories
       );
     }
 
-    // Filter by selected subcategories
-    if (subCategory.length > 0) {
-      filteredProducts = filteredProducts.filter((item) =>
-        subCategory.includes(item.subCategory)
-      );
-    }
-
-    // Sort products
+    // Sorting logic
     switch (sortType) {
       case "low-high":
         filteredProducts.sort((a, b) => a.price - b.price);
@@ -54,22 +52,24 @@ const Collection = () => {
     setFilterProducts(filteredProducts);
   };
 
-  // Update filters whenever products or filter conditions change
+  // Update filter whenever products or filter conditions change
   useEffect(() => {
     applyFilterAndSort();
-  }, [products, category, subCategory, search, sortType]);
+  }, [products, category, search, sortType]);
 
   return (
     <div className="flex flex-col sm:flex-row gap-1 sm:gap-10 pt-10 border-t">
       {/* Filter Sidebar */}
       <div className="min-w-60">
-        <p className="my-2 text-xl flex items-center cursor-pointer gap-2">FILTERS</p>
+        <p className="my-2 text-xl flex items-center cursor-pointer gap-2">
+          FILTERS
+        </p>
 
         {/* Category Filter */}
         <div className="border border-gray-300 pl-5 py-3 mt-6">
           <p>CATEGORIES</p>
           <div className="flex flex-col gap-2 text-sm font-light text-gray-700">
-            {["Men", "Women", "Kids"].map((categoryName) => (
+            {["Men", "Women", "Kid"].map((categoryName) => (
               <p key={categoryName} className="flex gap-2">
                 <input
                   type="checkbox"
@@ -84,30 +84,6 @@ const Collection = () => {
                   checked={category.includes(categoryName)}
                 />
                 {categoryName}
-              </p>
-            ))}
-          </div>
-        </div>
-
-        {/* Sub-Category Filter */}
-        <div className="border border-gray-300 pl-5 py-3 my-5">
-          <p>TYPE</p>
-          <div className="flex flex-col gap-2 text-sm font-light text-gray-700">
-            {["Topwear", "Bottomwear", "Winterwear"].map((type) => (
-              <p key={type} className="flex gap-2">
-                <input
-                  type="checkbox"
-                  value={type}
-                  onChange={(e) =>
-                    setSubCategory((prev) =>
-                      prev.includes(type)
-                        ? prev.filter((item) => item !== type)
-                        : [...prev, type]
-                    )
-                  }
-                  checked={subCategory.includes(type)}
-                />
-                {type}
               </p>
             ))}
           </div>
@@ -135,7 +111,7 @@ const Collection = () => {
           {filterProducts.length > 0 ? (
             filterProducts.map((item) => (
               <ProductItem
-                key={item._id}
+                key={item.id}
                 id={item.id}
                 name={item.name}
                 image={item.image}
