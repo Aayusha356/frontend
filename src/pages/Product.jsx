@@ -32,7 +32,7 @@ const Product = () => {
       setError(null);
 
       try {
-        const response = await axios.get(`http://127.0.0.1:8000/product/api/products/${id}/`);
+        const response = await axios.get(`http://127.0.0.1:8000/products/${id}/`);
         setProductData(response.data);
         setCurrentImage(response.data.image || "https://via.placeholder.com/500");
       } catch (err) {
@@ -105,7 +105,7 @@ const Product = () => {
   const {
     name = "Unknown Product",
     image = "https://via.placeholder.com/500",
-    price = "N/A",
+    current_price = "N/A",
     description = "No description available.",
     category = "Uncategorized",
     sizes = [],
@@ -128,7 +128,7 @@ const Product = () => {
         {/* Product Information */}
         <div className="flex-1 mt-6">
           <h1 className="font-medium text-2xl mt-2">{name}</h1>
-          <p className="mt-5 text-3xl font-medium">${price}</p>
+          <p className="mt-5 text-3xl font-medium">${current_price}</p>
           <p className="mt-5 text-gray-500 md:w-4/5">{description}</p>
 
           {/* Size Selection */}

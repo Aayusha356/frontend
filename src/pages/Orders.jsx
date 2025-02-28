@@ -16,7 +16,7 @@ const Orders = () => {
       }
 
       try {
-        const response = await axios.get("http://127.0.0.1:8000/product/api/orders/", {
+        const response = await axios.get("http://127.0.0.1:8000/orders/", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -58,9 +58,7 @@ const Orders = () => {
                 <div className="flex items-start gap-6 text-sm">
                   <div>
                     <p className="font-medium">Order #{order.id}</p>
-                    <p className="text-gray-400">
-                      Date: {order.date ? order.date : "Date not available"}
-                    </p>
+                    
 
                     {/* Check if order.items exists and is an array */}
                     {order.items && Array.isArray(order.items) ? (

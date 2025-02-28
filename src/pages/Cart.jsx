@@ -3,12 +3,11 @@ import { ShopContext } from "../context/ShopContext";
 import Title from "../components/Title";
 import { assets } from "../assets/assets";
 import CartTotal from "../components/CartTotal";
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const Cart = () => {
-  
-  const { currency, cartItems, updateQuantity, navigate, products } = useContext(ShopContext);
+  const { currency, cartItems, updateQuantity, navigate, products, delivery_fee } = useContext(ShopContext);
   const [cartData, setCartData] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -37,7 +36,6 @@ const Cart = () => {
 
   const handlePlaceOrder = async () => {
     const token = localStorage.getItem("accessToken");
-    
 
     if (!token) {
       alert("You need to log in first!");
@@ -52,40 +50,52 @@ const Cart = () => {
 
     const totalPrice = cartData.reduce((total, item) => {
       const product = getProductDetails(item.id);
-      return total + product.price * item.quantity;
+      return total + (product?.current_price || 0) * item.quantity;
     }, 0);
+
+    const finalTotalPrice = totalPrice + (delivery_fee || 0);
 
     const orderData = {
       user: {
-        id:  localStorage.getItem("userid") || "Unknown User",
-        token: token
+        id: localStorage.getItem("userid") || "Unknown User",
+        token: token,
       },
-      totalprice: totalPrice,
-      items: cartData.map((item) => ({
-        id: item.id,
-        name: getProductDetails(item.id)?.name || "Unknown Product",
-        price: getProductDetails(item.id)?.price || 0,
-        size: item.size,
-        quantity: item.quantity,
-        image: getProductDetails(item.id)?.image || "https://via.placeholder.com/150",
-      }))
+      totalprice: finalTotalPrice,
+      items: cartData.map((item) => {
+        const product = getProductDetails(item.id);
+        console.log("Product Details for Item:", product); // Debugging
+        return {
+          id: item.id,
+          name: product?.name || "Unknown Product",
+          price: product?.current_price || 0,
+          size: item.size,
+          quantity: item.quantity,
+          image: product?.image || "https://via.placeholder.com/150", // Ensure image is included
+        };
+      }),
     };
 
-    localStorage.setItem("orderData", JSON.stringify(orderData));
-    
+    // Debugging Logs
+    console.log("Order Data Before Saving:", JSON.stringify(orderData, null, 2));
+
+    // Store only the latest order
+    localStorage.setItem("orders", JSON.stringify([orderData])); // ✅ Overwrite instead of append
+
+    console.log("Updated Orders in LocalStorage:", JSON.parse(localStorage.getItem("orders")));
+
     try {
       const response = await axios.post(
-        "http://127.0.0.1:8000/product/api/orders/",  
-        orderData,  
+        "http://127.0.0.1:8000/orders/",
+        orderData,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
 
       console.log("Order placed successfully:", response.data);
-      
+
       localStorage.removeItem("cartItems");
       setCartData([]);
       navigate("/orders");
@@ -120,13 +130,17 @@ const Cart = () => {
                   <div>
                     <p className="text-xs sm:text-lg font-medium">{product.name}</p>
                     <div className="flex items-center gap-5 mt-2">
-                      <p>{currency}{product.price}</p>
+                      <p>{currency}{product.current_price}</p>
                       <p className="px-2 sm:py-1 border bg-slate-50">{item.size}</p>
                     </div>
                   </div>
                 </div>
                 <input
-                  onChange={(e) => e.target.value === "" || e.target.value === "0" ? null : updateQuantity(item.id, item.size, Number(e.target.value))}
+                  onChange={(e) =>
+                    e.target.value === "" || e.target.value === "0"
+                      ? null
+                      : updateQuantity(item.id, item.size, Number(e.target.value))
+                  }
                   className="border max-w-10 sm:max-w-20 px-1 sm:px-2 py-1"
                   type="number"
                   min={1}
@@ -161,3 +175,4 @@ const Cart = () => {
 };
 
 export default Cart;
+  

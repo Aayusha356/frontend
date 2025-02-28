@@ -18,7 +18,10 @@ const Collection = () => {
   const applyFilterAndSort = () => {
     if (!products || products.length === 0) return; // Ensure products exist
 
-    let filteredProducts = [...products];
+    let filteredProducts = [...products].map(product => ({
+      ...product,
+      price: product.current_price, // ✅ Standardizing 'price'
+    }));
 
     // Debugging: Log filter conditions
     console.log("Filtering with:", { category, search, sortType });
@@ -115,7 +118,7 @@ const Collection = () => {
                 id={item.id}
                 name={item.name}
                 image={item.image}
-                price={item.price}
+                price={item.current_price}
               />
             ))
           ) : (

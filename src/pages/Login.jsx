@@ -7,19 +7,17 @@ const Login = () => {
   const [currentState, setCurrentState] = useState('Sign Up');
   const [formData, setFormData] = useState({
     username: '',
-    email: '',
-    phone_number: '',
     password: '',
   });
   const [error, setError] = useState(null);
   const [message, setMessage] = useState('');
 
-  // 🔹 Handle Input Changes
+  // Handle Input Changes
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // 🔹 Handle Form Submission
+  // Handle Form Submission
   const onSubmitHandler = async (event) => {
     event.preventDefault();
     setError(null);
@@ -27,22 +25,21 @@ const Login = () => {
 
     try {
       const endpoint = currentState === 'Login' 
-        ? 'http://127.0.0.1:8000/api/user/login/'  // Login endpoint
-        : 'http://127.0.0.1:8000/api/user/register/'; // Signup endpoint
+        ? 'http://127.0.0.1:8000/user/login/'  // Login endpoint
+        : 'http://127.0.0.1:8000/user/register/'; // Signup endpoint
 
+      // Send POST request for login
       const response = await axios.post(endpoint, formData, {
         headers: { 'Content-Type': 'application/json' }
       });
 
-      if (currentState === 'Login') {
+      if (currentState === 'Login' && response.data.access) {
+        // Store the token in localStorage if login is successful
         localStorage.setItem('accessToken', response.data.access);
-        
-        
       }
 
       setMessage(`Success: ${response.data.message || 'Logged in!'}`);
-      navigate("/"); 
-      
+      navigate("/");  // Redirect to homepage or any other page
     } catch (err) {
       setError(err.response?.data?.detail || 'Something went wrong');
     }

@@ -36,7 +36,7 @@ const ShopContextProvider = (props) => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await axios.get("http://127.0.0.1:8000/product/api/products/");
+        const response = await axios.get("http://127.0.0.1:8000/products/");
         setProducts(response.data);
       } catch (error) {
         console.error("Error fetching products:", error);
@@ -165,11 +165,11 @@ const ShopContextProvider = (props) => {
       const product = products.find((p) => p.id === Number(itemId));
       if (product) {
         for (const size in cartItems[itemId]) {
-          totalPrice += cartItems[itemId][size] * product.price;
+          totalPrice += cartItems[itemId][size] * product.current_price;
         }
       }
     }
-    return totalPrice + delivery_fee;
+    return totalPrice ;
   };
 
   const value = {
